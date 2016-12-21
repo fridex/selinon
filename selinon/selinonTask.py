@@ -17,6 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # ####################################################################
+"""
+Base class for user-defined tasks
+"""
 
 import abc
 from celery.result import AsyncResult
@@ -160,4 +163,3 @@ class SelinonTask(metaclass=abc.ABCMeta):
         :return: tasks's result that will be stored in database as configured
         """
         pass
-

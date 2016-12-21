@@ -123,6 +123,7 @@ from celery.utils.log import get_task_logger
 
 
 def _default_trace_func(event, msg_dict):
+    # pylint: disable=unused-argument
     """
     Default tracing function that is used for storing results - do nothing
 
@@ -255,4 +256,3 @@ class Trace(object):
             return logger.warn(message)
         else:
             return logger.info(message)
-

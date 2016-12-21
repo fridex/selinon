@@ -23,7 +23,7 @@ from flexmock import flexmock
 from selinonTestCase import SelinonTestCase
 from selinon import Dispatcher
 from selinon.systemState import SystemState
-from selinon.flowError import FlowError
+from selinon import FlowError
 from requestMock import RequestMock
 
 

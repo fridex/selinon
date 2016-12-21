@@ -17,13 +17,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # ####################################################################
+"""
+A raw Celery task that is responsible for running SelinonTask
+"""
 
 import traceback
-import jsonschema
 import json
+import jsonschema
 from celery import Task
 from .storagePool import StoragePool
-from .fatalTaskError import FatalTaskError
+from .errors import FatalTaskError
 from .trace import Trace
 from .config import Config
 from .retry import Retry
@@ -50,13 +53,25 @@ class SelinonTaskEnvelope(Task):
         """
         schema_path = Config.output_schemas.get(task_name)
         if schema_path:
-            with open(schema_path, "r") as f:
-                schema = json.load(f)
+            with open(schema_path, "r") as input_file:
+                schema = json.load(input_file)
 
             jsonschema.validate(result, schema)
 
     def selinon_retry(self, task_name, flow_name, parent, node_args, retry_countdown, retried_count,
                       dispatcher_id, user_retry=False):
+        # pylint: disable=too-many-arguments
+        """Retry on Celery level
+
+        :param task_name: name of the task to be retried
+        :param flow_name: name of in which the task was run
+        :param parent: dict of parent tasks
+        :param node_args: arguments for task
+        :param retry_countdown: countdown for retry
+        :param retried_count: number of retries already done with this task
+        :param dispatcher_id: ID id of dispatcher that is handling flow that run this task
+        :param user_retry: True if retry was forced from the user
+        """
         max_retry = Config.max_retry.get(task_name, 0)
         kwargs = {
             'task_name': task_name,
@@ -82,6 +97,7 @@ class SelinonTaskEnvelope(Task):
         raise self.retry(kwargs=kwargs, countdown=retry_countdown, queue=Config.task_queues[task_name])
 
     def run(self, task_name, flow_name, parent, node_args, dispatcher_id, retried_count=None):
+        # pylint: disable=arguments-differ,too-many-arguments
         """
         Task entry-point called by Celery
 
@@ -124,7 +140,7 @@ class SelinonTaskEnvelope(Task):
             # we do not touch retried_count
             self.selinon_retry(task_name, flow_name, parent, node_args, retry.countdown, retried_count,
                                dispatcher_id, user_retry=True)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             max_retry = Config.max_retry.get(task_name, 0)
             retried_count = retried_count or 0
 

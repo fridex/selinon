@@ -17,6 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # ####################################################################
+"""
+Main system actions done by Selinon
+"""
 
 import itertools
 import json
@@ -26,14 +29,14 @@ from threading import Lock
 from functools import reduce
 from collections import deque
 from celery.result import AsyncResult
-from .flowError import FlowError
+from .errors import FlowError
 from .storagePool import StoragePool
 from .trace import Trace
 from .config import Config
 from .selinonTaskEnvelope import SelinonTaskEnvelope
 
 
-class SystemState(object):
+class SystemState(object):  # pylint: disable=too-many-instance-attributes
     """
     Main system actions done by Selinon
     """
@@ -51,7 +54,7 @@ class SystemState(object):
         return self._node_args
 
     @staticmethod
-    def _get_async_result(id):
+    def _get_async_result(id):  # pylint: disable=invalid-name,redefined-builtin
         return AsyncResult(id=id)
 
     @classmethod
@@ -81,7 +84,8 @@ class SystemState(object):
         # Make tests more readable
         return str(self.to_dict())
 
-    def __init__(self, dispatcher_id, flow_name, node_args = None, retry = None, state = None, parent=None):
+    def __init__(self, dispatcher_id, flow_name, node_args=None, retry=None, state=None, parent=None):
+        # pylint: disable=too-many-arguments
         state_dict = state or {}
 
         self._dispatcher_id = dispatcher_id
@@ -100,11 +104,12 @@ class SystemState(object):
         """
         :return: converted system state to dict
         """
-        return {'active_nodes': self._deinstantiate_active_nodes(self._active_nodes),
-                'finished_nodes': self._finished_nodes,
-                'failed_nodes': self._failed_nodes,
-                'waiting_edges': self._waiting_edges_idx
-                }
+        return {
+            'active_nodes': self._deinstantiate_active_nodes(self._active_nodes),
+            'finished_nodes': self._finished_nodes,
+            'failed_nodes': self._failed_nodes,
+            'waiting_edges': self._waiting_edges_idx
+        }
 
     def _get_countdown(self, node_name, is_flow):
         """
@@ -257,13 +262,13 @@ class SystemState(object):
         if 'foreach' in edge:
             iterable = edge['foreach'](storage_pool, node_args)
             Trace.log(Trace.FOREACH_RESULT, {
-                            'nodes_to': edge['to'],
-                            'nodes_from': edge['from'],
-                            'flow_name': self._flow_name,
-                            'foreach_str': edge['foreach_str'],
-                            'parent': parent,
-                            'node_args': self._node_args,
-                            'dispatcher_id': self._dispatcher_id
+                'nodes_to': edge['to'],
+                'nodes_from': edge['from'],
+                'flow_name': self._flow_name,
+                'foreach_str': edge['foreach_str'],
+                'parent': parent,
+                'node_args': self._node_args,
+                'dispatcher_id': self._dispatcher_id
             })
             # handle None as well
             if not iterable:
@@ -293,6 +298,7 @@ class SystemState(object):
         ret = []
         failed_nodes = sorted(self._failed_nodes.items())
 
+        # pylint: disable=too-many-nested-blocks
         for i in range(len(failed_nodes), 0, -1):
             for combination in itertools.combinations(failed_nodes, i):
                 change = True
@@ -361,6 +367,7 @@ class SystemState(object):
 
     @classmethod
     def _extend_parent_from_flow(cls, dst_dict, flow_name, flow_id, key, compound=False):
+        # pylint: disable=too-many-arguments,too-many-locals
         """
         Compute parent in a flow in case of propagate_parent flag
 
@@ -371,6 +378,7 @@ class SystemState(object):
         :param compound: true if propagate_compound was used
         """
         def follow_keys(d, k):
+            # pylint: disable=invalid-name,missing-docstring
             if not compound:
                 # A key is always a flow name except the last key, which is a task name with list of task ids
                 for m_k in k:
@@ -389,6 +397,7 @@ class SystemState(object):
                 return d[flow_name]
 
         def push_flow(s, p_n_name, flow_result, k):
+            # pylint: disable=invalid-name,missing-docstring
             for n_name, n_ids in flow_result[key].items():
                 if not compound:
                     shallow_k = copy.copy(k)
@@ -419,13 +428,14 @@ class SystemState(object):
 
         return res
 
-    def _start_new_from_finished(self, new_finished):
+    def _start_new_from_finished(self, new_finished):  # pylint: disable=too-many-locals
         """
         Start new based on finished nodes
 
         :param new_finished: finished nodes based on which we should start new nodes
         :return: newly started nodes
         """
+        # pylint: disable=too-many-nested-blocks,too-many-branches
         ret = []
 
         if len(new_finished) == 1 and len(self._active_nodes) == 0 and len(self._finished_nodes) == 0:

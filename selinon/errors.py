@@ -17,6 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # ####################################################################
+"""
+Errors that can be used or can occur outside Selinon
+"""
 
 
 class FatalTaskError(Exception):
@@ -36,5 +39,11 @@ class InternalError(Exception):
 class ConfigError(Exception):
     """
     Error raised when there is an error when parsing configuration files
+    """
+    pass
+
+class FlowError(Exception):
+    """
+    An exception that is raised once there is an error in the flow
     """
     pass

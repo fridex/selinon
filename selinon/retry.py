@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+Retry exception raised on retry
+"""
 
 
 class Retry(Exception):
@@ -8,4 +11,3 @@ class Retry(Exception):
     def __init__(self, countdown):
         self.countdown = countdown
         Exception.__init__(self, countdown)
-

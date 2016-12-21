@@ -17,21 +17,24 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # ####################################################################
+"""
+All user configurations generated from YAML file
+"""
 
 import os
 import runpy
 import tempfile
 import logging
-from .trace import Trace
 from selinonlib import System
-
-_logger = logging.getLogger(__name__)
+from .trace import Trace
 
 
 class Config(object):
     """
     All user configurations generated from YAML file
     """
+    _logger = logging.getLogger(__name__)
+
     celery_app = None
 
     flows = None
@@ -106,7 +109,7 @@ class Config(object):
 
         :param config_code: configuration source code
         """
-        _logger.debug("Using config.py file from '%s'", config_code)
+        cls._logger.debug("Using config.py file from '%s'", config_code)
         config_module = runpy.run_path(config_code)
         cls._set_config(config_module)
 
@@ -124,19 +127,19 @@ class Config(object):
 
         if not config_py:
             tmp_f = tempfile.NamedTemporaryFile(mode="w", delete=False)
-            _logger.debug("Generating config.py file to created temporary file '%s'", tmp_f.name)
+            cls._logger.debug("Generating config.py file to created temporary file '%s'", tmp_f.name)
             system.dump2stream(tmp_f)
             tmp_f.close()
             config_py = tmp_f.name
         else:
-            _logger.debug("Generating config.py file to proposed file '%s'", config_py)
-            with open(config_py, "w") as f:
-                system.dump2stream(f)
+            cls._logger.debug("Generating config.py file to proposed file '%s'", config_py)
+            with open(config_py, "w") as output_f:
+                system.dump2stream(output_f)
 
         cls.set_config_py(config_py)
 
         if not keep_config_py:
-            _logger.debug("Removing generated config.py file '%s'", config_py)
+            cls._logger.debug("Removing generated config.py file '%s'", config_py)
             os.unlink(config_py)
 
     @classmethod
@@ -166,7 +169,7 @@ class Config(object):
         from .dispatcher import Dispatcher
         from .selinonTaskEnvelope import SelinonTaskEnvelope
 
-        _logger.debug("Registering Selinon to Celery context")
+        cls._logger.debug("Registering Selinon to Celery context")
 
         cls.celery_app = celery_app
         celery_app.tasks.register(Dispatcher())
@@ -216,7 +219,7 @@ class Config(object):
         return cls._should_config(node_name, dst_node_name, cls.propagate_parent)
 
     @classmethod
-    def should_propagate_compound_finished(cls, node_name, dst_node_name):
+    def should_propagate_compound_finished(cls, node_name, dst_node_name):  # pylint: disable=invalid-name
         """
         :param node_name: node name that should be checked for propagate_compound_finished
         :param dst_node_name: destination node to which configuration should be propagated

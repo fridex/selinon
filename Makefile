@@ -29,7 +29,7 @@ check:
 	@# We have to adjust PYTHONPATH so we use our own Celery and modified Selinon Dispatcher for testing
 	@# Make sure we have -p no:celery otherwise py.test is trying to do dirty stuff with loading celery.contrib
 	PYTHONPATH="test/:${PYTHONPATH}" py.test -s --cov=./selinon -vvl --timeout=2 -p no:celery test/*.py
-	@[ -n "${NOPYLINT}" ] || pylint selinon || true
+	@[ -n "${NOPYLINT}" ] || pylint selinon
 
 doc:
 	@sphinx-apidoc -e -o docs.source/api selinon -f
